@@ -47,5 +47,6 @@ public interface Constants {
 
     public static final String EMAILDEBUG="email.debug";
 
+    public static final String PUBLIC_IP = "public.ip";
 
 }

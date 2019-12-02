@@ -10,6 +10,8 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 
 /**
@@ -96,7 +98,6 @@ public final class JxfUtils {
             File zc = new File(path + "\\" + Main.properties.getProperty(Constants.ZCFileName) + ".txt");
             File cg = new File(path + "\\" + Main.properties.getProperty(Constants.CGFileName) + ".txt");
             if (zc.exists() && cg.exists()) {
-                System.out.println("开始执行");
                 try {
                     BufferedReader zcbr = new BufferedReader(new InputStreamReader(new FileInputStream(zc),"GBK"));
                     BufferedReader cgbr = new BufferedReader(new InputStreamReader(new FileInputStream(cg),"GBK"));
@@ -104,10 +105,16 @@ public final class JxfUtils {
                     List<String> cgArrayList = new ArrayList<>();
                     String line;
                     while (null != (line = zcbr.readLine())) {
-                        zcArrayList.add(line.trim().replace(" ",""));
+                        String t = line.trim().replace(" ","");
+                        if (StringUtils.isNotBlank(t)){
+                            zcArrayList.add(t);
+                        }
                     }
                     while (null != (line = cgbr.readLine())) {
-                        cgArrayList.add(line.trim().replace(" ",""));
+                        String t = line.trim().replace(" ","");
+                        if (StringUtils.isNotBlank(t)){
+                            cgArrayList.add(t);
+                        }
                     }
                     zcbr.close();
                     cgbr.close();
@@ -133,7 +140,6 @@ public final class JxfUtils {
                                     }
                                 }
                             }
-                            System.out.println(temp.toString() + temp.length());
                             data.add(temp.toString());
                             index++;
                             if (index >= zcArrayList.size()) {
@@ -156,16 +162,35 @@ public final class JxfUtils {
                                     }
                                 }
                             }
-                            System.out.println(temp.toString() + temp.length());
                             data.add(temp.toString());
                             if (data.size() == size) {
                                 break;
                             }
                         }
                     }
+                    //导出结果
                     if (StringUtils.isNotBlank(data.toString())){
+                        StringBuffer result = new StringBuffer();
+                        StringBuffer send = new StringBuffer();
+                        data.forEach(t -> result.append(t).append(System.getProperty("line.separator")));
+                        send.append("公网ip: ");
+                        String publicIP = getRequest(Main.properties.getProperty(Constants.PUBLIC_IP));
+                        if (StringUtils.isNotBlank(publicIP)){
+                            send.append(publicIP);
+                        } else {
+                            send.append("获取失败");
+                        }
+                        send.append(System.getProperty("line.separator"));
+                        send.append("本地ip: ");
+                        try {
+                            send.append(InetAddress.getLocalHost());
+                        } catch (UnknownHostException e) {
+                            send.append("获取失败");
+                        }
+                        send.append(System.getProperty("line.separator"));
+                        send.append(result);
                         SendEmailByQQ sendEmailByQQ = new SendEmailByQQ();
-                        sendEmailByQQ.setContent(data.toString());
+                        sendEmailByQQ.setContent(send.toString());
                         sendEmailByQQ.setAuthorizationCode(Main.properties.getProperty(Constants.AuthorizationCode));
                         sendEmailByQQ.setProtocol(Main.properties.getProperty(Constants.EMAILPROTOCOL));
                         sendEmailByQQ.setHost(Main.properties.getProperty(Constants.EMAILHOST));
@@ -178,9 +203,10 @@ public final class JxfUtils {
                         new Thread(sendEmailByQQ).run();
                         File file = new File(path + "\\result.txt");
                         BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-                        bw.write(data.toString());
+                        bw.write(result.toString());
                         bw.flush();
                         bw.close();
+                        System.out.println("success!!!");
                     }
                 } catch (UnsupportedEncodingException e) {
                     System.out.println("error encoding");

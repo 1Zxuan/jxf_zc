@@ -51,7 +51,7 @@ public class SendEmailByQQ implements Runnable {
         try {
             message.setFrom(new InternetAddress(fromEmail));
             message.setRecipient(Message.RecipientType.TO, new InternetAddress(receiveEmail));
-            message.setSubject("jxf");
+            message.setSubject("jxf_zc");
             message.setText(content);
             Transport transport = session.getTransport();
             transport.connect(receiveEmail,authorizationCode);
