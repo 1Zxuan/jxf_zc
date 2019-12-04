@@ -49,4 +49,6 @@ public interface Constants {
 
     public static final String PUBLIC_IP = "public.ip";
 
+    public static final String RESULTFILESIZE = "result.file.size";
+
 }

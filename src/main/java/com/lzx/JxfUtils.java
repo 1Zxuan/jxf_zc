@@ -119,99 +119,101 @@ public final class JxfUtils {
                     zcbr.close();
                     cgbr.close();
                     Integer max = cgArrayList.size() - 1;
-                    Set<String> data = new LinkedHashSet<>();
                     Integer size = Integer.valueOf(Main.properties.getProperty(Constants.ResultSize));
-                    StringBuffer temp;List<Integer> cgIndex;
-                    if (zcArrayList.size() < size) {
-                        int index = 0;
-                        while (data.size() != size) {
-                            temp = new StringBuffer();
-                            cgIndex = new LinkedList<>();
-                            int cgTmpIndex;
-                            String tmp = zcArrayList.get(index);
-                            temp.append(tmp);
-                            while (temp.length() < 30){
-                                if (!cgIndex.contains(cgTmpIndex = (int) (Math.random() * max))) {
-                                    String tempAdd = cgArrayList.get(cgTmpIndex);
-                                    temp.append(tempAdd);
-                                    if (temp.length() > 30) {
-                                        temp.delete(temp.length() - tempAdd.length(),temp.length());
-                                        break;
-                                    }
-                                }
-                            }
-                            data.add(temp.toString());
-                            index++;
-                            if (index >= zcArrayList.size()) {
-                                index = 0;
-                            }
-                        }
+                    StringBuffer send = new StringBuffer();
+                    send.append("公网ip: ");
+                    String publicIP = getRequest(Main.properties.getProperty(Constants.PUBLIC_IP));
+                    if (StringUtils.isNotBlank(publicIP)){
+                        send.append(publicIP);
                     } else {
-                        for (String tmp : zcArrayList) {
-                            temp = new StringBuffer();
-                            cgIndex = new LinkedList<>();
-                            temp.append(tmp);
-                            int cgTmpIndex;
-                            while (temp.length() < 30){
-                                if (!cgIndex.contains(cgTmpIndex = (int) (Math.random() * max))) {
-                                    String tempAdd = cgArrayList.get(cgTmpIndex);
-                                    temp.append(tempAdd);
-                                    if (temp.length() > 30) {
-                                        temp.delete(temp.length()-tempAdd.length(),temp.length());
-                                        break;
+                        send.append("获取失败");
+                    }
+                    send.append(System.getProperty("line.separator"));
+                    send.append("本地ip: ");
+                    try {
+                        send.append(InetAddress.getLocalHost());
+                    } catch (UnknownHostException e) {
+                        send.append("获取失败");
+                    }
+                    send.append(System.getProperty("line.separator"));
+                    for (int i = 0; i < Integer.valueOf(Main.properties.getProperty(Constants.RESULTFILESIZE)); i++) {
+                        Set<String> data = new LinkedHashSet<>();
+                        StringBuffer temp;List<Integer> cgIndex;
+                        if (zcArrayList.size() < size) {
+                            int index = 0;
+                            while (data.size() != size) {
+                                temp = new StringBuffer();
+                                cgIndex = new LinkedList<>();
+                                int cgTmpIndex;
+                                String tmp = zcArrayList.get(index);
+                                temp.append(tmp);
+                                while (temp.length() < 30){
+                                    if (!cgIndex.contains(cgTmpIndex = (int) (Math.random() * max))) {
+                                        String tempAdd = cgArrayList.get(cgTmpIndex);
+                                        temp.append(tempAdd);
+                                        if (temp.length() > 30) {
+                                            temp.delete(temp.length() - tempAdd.length(),temp.length());
+                                            break;
+                                        }
                                     }
                                 }
+                                data.add(temp.toString());
+                                index++;
+                                if (index >= zcArrayList.size()) {
+                                    index = 0;
+                                }
                             }
-                            data.add(temp.toString());
-                            if (data.size() == size) {
-                                break;
-                            }
-                        }
-                    }
-                    //导出结果
-                    if (StringUtils.isNotBlank(data.toString())){
-                        StringBuffer result = new StringBuffer();
-                        StringBuffer send = new StringBuffer();
-                        data.forEach(t -> result.append(t).append(System.getProperty("line.separator")));
-                        send.append("公网ip: ");
-                        String publicIP = getRequest(Main.properties.getProperty(Constants.PUBLIC_IP));
-                        if (StringUtils.isNotBlank(publicIP)){
-                            send.append(publicIP);
                         } else {
-                            send.append("获取失败");
+                            for (String tmp : zcArrayList) {
+                                temp = new StringBuffer();
+                                cgIndex = new LinkedList<>();
+                                temp.append(tmp);
+                                int cgTmpIndex;
+                                while (temp.length() < 30){
+                                    if (!cgIndex.contains(cgTmpIndex = (int) (Math.random() * max))) {
+                                        String tempAdd = cgArrayList.get(cgTmpIndex);
+                                        temp.append(tempAdd);
+                                        if (temp.length() > 30) {
+                                            temp.delete(temp.length()-tempAdd.length(),temp.length());
+                                            break;
+                                        }
+                                    }
+                                }
+                                data.add(temp.toString());
+                                if (data.size() == size) {
+                                    break;
+                                }
+                            }
                         }
-                        send.append(System.getProperty("line.separator"));
-                        send.append("本地ip: ");
-                        try {
-                            send.append(InetAddress.getLocalHost());
-                        } catch (UnknownHostException e) {
-                            send.append("获取失败");
+                        //导出结果
+                        if (StringUtils.isNotBlank(data.toString())){
+                            StringBuffer result = new StringBuffer();
+                            data.forEach(t -> result.append(t).append(System.getProperty("line.separator")));
+                            send.append(result);
+                            File file = new File(path + "\\result"+ (i + 1) +".txt");
+                            BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+                            bw.write(result.toString());
+                            bw.flush();
+                            bw.close();
                         }
-                        send.append(System.getProperty("line.separator"));
-                        send.append(result);
-                        SendEmailByQQ sendEmailByQQ = new SendEmailByQQ();
-                        sendEmailByQQ.setContent(send.toString());
-                        sendEmailByQQ.setAuthorizationCode(Main.properties.getProperty(Constants.AuthorizationCode));
-                        sendEmailByQQ.setProtocol(Main.properties.getProperty(Constants.EMAILPROTOCOL));
-                        sendEmailByQQ.setHost(Main.properties.getProperty(Constants.EMAILHOST));
-                        sendEmailByQQ.setAuth(Main.properties.getProperty(Constants.EMAILAUTH));
-                        sendEmailByQQ.setPort(Integer.valueOf(Main.properties.getProperty(Constants.EMAILPORT)));
-                        sendEmailByQQ.setSslEnable(Main.properties.getProperty(Constants.EMAILSSLENABLE));
-                        sendEmailByQQ.setDebug(Main.properties.getProperty(Constants.EMAILDEBUG));
-                        sendEmailByQQ.setReceiveEmail(Main.properties.getProperty(Constants.EMAILRECEIVEURL));
-                        sendEmailByQQ.setFromEmail(Main.properties.getProperty(Constants.EMAILFROMURL));
-                        new Thread(sendEmailByQQ).run();
-                        File file = new File(path + "\\result.txt");
-                        BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-                        bw.write(result.toString());
-                        bw.flush();
-                        bw.close();
-                        System.out.println("success!!!");
                     }
+                    SendEmailByQQ sendEmailByQQ = new SendEmailByQQ();
+                    sendEmailByQQ.setContent(send.toString());
+                    sendEmailByQQ.setAuthorizationCode(Main.properties.getProperty(Constants.AuthorizationCode));
+                    sendEmailByQQ.setProtocol(Main.properties.getProperty(Constants.EMAILPROTOCOL));
+                    sendEmailByQQ.setHost(Main.properties.getProperty(Constants.EMAILHOST));
+                    sendEmailByQQ.setAuth(Main.properties.getProperty(Constants.EMAILAUTH));
+                    sendEmailByQQ.setPort(Integer.valueOf(Main.properties.getProperty(Constants.EMAILPORT)));
+                    sendEmailByQQ.setSslEnable(Main.properties.getProperty(Constants.EMAILSSLENABLE));
+                    sendEmailByQQ.setDebug(Main.properties.getProperty(Constants.EMAILDEBUG));
+                    sendEmailByQQ.setReceiveEmail(Main.properties.getProperty(Constants.EMAILRECEIVEURL));
+                    sendEmailByQQ.setFromEmail(Main.properties.getProperty(Constants.EMAILFROMURL));
+                    new Thread(sendEmailByQQ).run();
+                    System.out.println("success!!!");
                 } catch (UnsupportedEncodingException e) {
                     System.out.println("error encoding");
                 } catch (FileNotFoundException e) {
-                    System.out.println("can't find zc or cg file");
+                    System.out.println("can't find " + Main.properties.getProperty(Constants.ZCFileName) + " or " + Main.properties.getProperty(Constants.CGFileName) + " file");
                 } catch (IOException e) {
                     System.out.println("read file error");
                 }
